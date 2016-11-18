@@ -17,6 +17,8 @@ class ByteArray {
     ByteArray(const ByteArray& ba);
     ByteArray& operator = (const ByteArray& ba);
 
+    bool            HasRoom(const uint32_t moreBytes) const { return (position + moreBytes <= capacity); }
+
 public:
     ByteArray(void* dataIn, const uint32_t len):
         position(0), capacity(len), data((uint8_t*)dataIn), ok(true)
@@ -37,11 +39,12 @@ public:
     // Serialize a primitive type
     template <typename T>
     ByteArray&  operator << (const T& value) {
-        ok = ok && (position + sizeof(value) <= capacity);
+        uint32_t len = sizeof(value);
+        ok = ok && HasRoom(len);
         if (!ok) throw std::length_error("operation overflows the byte array");
 
-        memcpy(data + position, &value, sizeof(value));
-        position += sizeof(value);
+        memcpy(data + position, &value, len);
+        position += len;
 
         return (*this);
     }
@@ -49,7 +52,7 @@ public:
     // Serialize a null-terminated string including the '\0' at the end
     ByteArray&  operator << (const char* value) {
         uint32_t len = strlen(value) + 1;
-        ok = ok && (position + len <= capacity);
+        ok = ok && HasRoom(len);
         if (!ok) throw std::length_error("operation overflows the byte array");
 
         memcpy(data + position, value, len);
@@ -61,11 +64,12 @@ public:
     // Deserialize a primitive type
     template <typename T>
     ByteArray&  operator >> (T& value) {
-        ok = ok && (position + sizeof(value) <= capacity);
+        uint32_t len = sizeof(value);
+        ok = ok && HasRoom(len);
         if (!ok) throw std::length_error("operation underruns the byte array");
 
-        memcpy(&value, data + position, sizeof(value));
-        position += sizeof(value);
+        memcpy(&value, data + position, len);
+        position += len;
 
         return (*this);
     }
@@ -73,7 +77,7 @@ public:
     // Deserialize a null-terminated string including the '\0' at the end
     ByteArray&  operator >> (char* value) {
         uint32_t len = strlen((char*)data + position) + 1;
-        ok = ok && (position + len <= capacity);
+        ok = ok && HasRoom(len);
         if (!ok) throw std::length_error("operation underruns the byte array");
 
         memcpy(value, data + position, len);
