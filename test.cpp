@@ -38,7 +38,11 @@ void test_ByteArray() {
 
     // - - - - - - - - - - - - - - - - - - - - - -
     printf("Testing overflow\n");
-    ba << s1 << s1 << s1 << s1 << s1;
+    try {
+        ba << s1 << s1 << s1 << s1 << s1;
+    } catch (const std::length_error& e) {
+        printf("Caught the expected exception\n");
+    }
     printf("ok: %s\n", (ba.IsOk() ? "true" : "false"));
     assert(ba.IsOk() == false);
 }
