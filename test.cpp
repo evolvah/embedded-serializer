@@ -43,9 +43,70 @@ void test_ByteArray() {
     assert(ba.IsOk() == false);
 }
 
+class Serializable {
+public:
+    virtual void    Serialize   (ByteArray& ba) = 0;
+    virtual void    Deserialize (ByteArray& ba) = 0;
+};
+
+struct LogRecord : public Serializable {
+    enum LOG_LEVEL {ERROR, WARNING, INFO};
+
+    uint32_t    schedulerClocksFromStart;
+    LOG_LEVEL   level;
+    uint32_t    source;
+    uint32_t    code;
+    uint8_t     textToStore[48];
+
+    void        Print() {
+        printf("LogRecord: this: %p schedulerClocksFromStart: %u, level: %u, source: %u, code: %u, textToStore: '%s'\n",
+            this, schedulerClocksFromStart, level, source, code, textToStore);
+    }
+
+    static const uint32_t MAX_SERIALIZED_LEN = 64;
+
+    void        Serialize (ByteArray& ba) {
+        uint32_t level_buffer = (uint32_t)level;
+        ba << schedulerClocksFromStart << level_buffer << source << code << (const char*) textToStore;
+    }
+
+    void        Deserialize (ByteArray& ba) {
+        uint32_t level_buffer = 0;
+        ba >> schedulerClocksFromStart >> level_buffer >> source >> code >> (char*) textToStore;
+        level = (LogRecord::LOG_LEVEL)level_buffer;
+    }
+};
+
+void test_LogRecord() {
+    // Allocate buffer
+    char        buff[LogRecord::MAX_SERIALIZED_LEN];
+    ByteArray   ba(buff, LogRecord::MAX_SERIALIZED_LEN);
+
+    // Create and initialize a LogRecord
+    LogRecord lr;
+    lr.schedulerClocksFromStart = 1;
+    lr.level = LogRecord::WARNING;
+    lr.source = 2;
+    lr.code = 3;
+    strcpy((char*)lr.textToStore, "Test string!");
+
+    printf("Serializing LogRecord...\n");
+    lr.Print();
+
+    lr.Serialize(ba);
+
+    ba.Reset(); // reset postion in the buffer
+
+    LogRecord new_lr;
+    printf("Deserializing LogRecord...\n");
+    new_lr.Deserialize(ba);
+    new_lr.Print();
+}
+
 int main(int argc, char const *argv[])
 {
     test_ByteArray();
+    test_LogRecord();
 
     return 0;
 }
