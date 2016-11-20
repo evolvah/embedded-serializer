@@ -17,7 +17,23 @@ class ByteArray {
     ByteArray(const ByteArray& ba);
     ByteArray& operator = (const ByteArray& ba);
 
-    bool            HasRoom(const uint32_t moreBytes) const { return (position + moreBytes <= capacity); }
+    bool HasRoom(const uint32_t moreBytes) const { return (position + moreBytes <= capacity); }
+
+    void WriteBytes(const void* dataIn, const uint32_t len) {
+        ok = ok && HasRoom(len);
+        if (!ok) throw std::length_error("operation overflows the byte array");
+
+        memcpy((uint8_t*)data + position, dataIn, len);
+        position += len;
+    }
+
+    void ReadBytes(void* dataOut, const uint32_t len) {
+        ok = ok && HasRoom(len);
+        if (!ok) throw std::length_error("operation underruns the byte array");
+
+        memcpy(dataOut, (uint8_t*)data + position, len);
+        position += len;
+    }
 
 public:
     ByteArray(void* dataIn, const uint32_t len):
@@ -39,50 +55,26 @@ public:
     // Serialize a primitive type
     template <typename T>
     ByteArray&  operator << (const T& value) {
-        uint32_t len = sizeof(value);
-        ok = ok && HasRoom(len);
-        if (!ok) throw std::length_error("operation overflows the byte array");
-
-        memcpy(data + position, &value, len);
-        position += len;
-
+        WriteBytes(&value, sizeof(value));
         return (*this);
     }
 
     // Serialize a null-terminated string including the '\0' at the end
     ByteArray&  operator << (const char* value) {
-        uint32_t len = strlen(value) + 1;
-        ok = ok && HasRoom(len);
-        if (!ok) throw std::length_error("operation overflows the byte array");
-
-        memcpy(data + position, value, len);
-        position += len;
-
+        WriteBytes(value, strlen(value) + 1);
         return (*this);
     }
 
     // Deserialize a primitive type
     template <typename T>
     ByteArray&  operator >> (T& value) {
-        uint32_t len = sizeof(value);
-        ok = ok && HasRoom(len);
-        if (!ok) throw std::length_error("operation underruns the byte array");
-
-        memcpy(&value, data + position, len);
-        position += len;
-
+        ReadBytes(&value, sizeof(value));
         return (*this);
     }
 
     // Deserialize a null-terminated string including the '\0' at the end
     ByteArray&  operator >> (char* value) {
-        uint32_t len = strlen((char*)data + position) + 1;
-        ok = ok && HasRoom(len);
-        if (!ok) throw std::length_error("operation underruns the byte array");
-
-        memcpy(value, data + position, len);
-        position += len;
-
+        ReadBytes(value, strlen((char*)data + position) + 1);
         return (*this);
     }
 };
