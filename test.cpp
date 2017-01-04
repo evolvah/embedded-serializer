@@ -112,5 +112,8 @@ int main(int argc, char const *argv[])
     test_ByteArray();
     test_LogRecord();
 
+    printf("All tests passed.\n");
+
     return 0;
 }
+

@@ -1,5 +1,5 @@
 # embedded-serializer
-Light-weight serialized for embedded applications
+Light-weight serializer for embedded applications
 
 # Sample run
 ```
@@ -11,7 +11,8 @@ Testing overflow
 Caught the expected exception
 ok: false
 Serializing LogRecord...
-LogRecord: this: 0x7fff5b88b9a8 schedulerClocksFromStart: 1, level: 1, source: 2, code: 3, textToStore: 'Test string!'
+LogRecord: this: 0x7ffc055b8ed0 schedulerClocksFromStart: 1, level: 1, source: 2, code: 3, textToStore: 'Test string!'
 Deserializing LogRecord...
-LogRecord: this: 0x7fff5b88b960 schedulerClocksFromStart: 1, level: 1, source: 2, code: 3, textToStore: 'Test string!'
+LogRecord: this: 0x7ffc055b8f20 schedulerClocksFromStart: 1, level: 1, source: 2, code: 3, textToStore: 'Test string!'
+All tests passed.
 ```
